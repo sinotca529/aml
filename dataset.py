@@ -1,9 +1,10 @@
 import numpy as np
+from numpy import ndarray
 
 class DataSet():
     # x: 各行が1サンプルを表す行列
     # y: 各サンプルのラベルを表す行列(縦ベクトル)
-    def __init__(self, x, y) -> None:
+    def __init__(self, x: ndarray, y: ndarray) -> None:
         (qty_sample, dim) = x.shape
         assert(qty_sample == y.shape[0])
         assert(y.shape[1] == 1)

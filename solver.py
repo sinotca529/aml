@@ -1,17 +1,17 @@
 import numpy as np
-
+from numpy import ndarray
 from dataset import *
 from objfunc import *
 
 class SteepestGradDescMethod():
-    def __init__(self, obj_func):
+    def __init__(self, obj_func: ObjFunc) -> None:
         self.__obj_func: ObjFunc = obj_func
 
-    def __calc_update_dir(self, data_set: DataSet, w):
+    def __calc_update_dir(self, data_set: DataSet, w: ndarray) -> ndarray:
         return -self.__obj_func.apply_grad(data_set, w)
 
     # argmin_α J(w + α * (-1)*grad(w)) に近いものを求める
-    def __calc_step_length_by_back_tracking(self, data_set: DataSet, w):
+    def __calc_step_length_by_back_tracking(self, data_set: DataSet, w: ndarray) -> float:
         grad = self.__obj_func.apply_grad(data_set, w)
         d = self.__calc_update_dir(data_set, w)
 
@@ -32,7 +32,7 @@ class SteepestGradDescMethod():
 
         return alpha
 
-    def batch_train(self, data_set: DataSet, w0):
+    def batch_train(self, data_set: DataSet, w0: ndarray):
         self.__obj_func.setup_with_data_set(data_set)
         # init w
         w = w0
@@ -70,15 +70,15 @@ class SteepestGradDescMethod():
         return (loss_hist, w_hist)
 
 class NewtonMethod():
-    def __init__(self, obj_func):
+    def __init__(self, obj_func: ObjFunc) -> None:
         self.__obj_func: ObjFunc = obj_func
 
-    def __calc_update_dir(self, data_set: DataSet, w):
+    def __calc_update_dir(self, data_set: DataSet, w: ndarray) -> ndarray:
         neg_grad = -self.__obj_func.apply_grad(data_set, w)
         hessian = self.__obj_func.apply_hessian(data_set, w)
         return np.dot(np.linalg.inv(hessian), neg_grad)
     
-    def batch_train(self, data_set: DataSet, w0):
+    def batch_train(self, data_set: DataSet, w0: ndarray):
         self.__obj_func.setup_with_data_set(data_set)
 
         w = w0
@@ -100,5 +100,4 @@ class NewtonMethod():
             # print("loss : ", str(loss_hist[-1]))
 
         return (loss_hist, w_hist)
-
 

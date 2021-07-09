@@ -1,5 +1,6 @@
 from abc import abstractmethod
 import numpy as np
+from numpy import ndarray
 
 from dataset import *
 
@@ -7,7 +8,7 @@ EPS = 10e-7
 
 # log(1 + e^x) を 計算する
 # xがでかい場合でもオーバーフローしない
-def log1p_exp(x):
+def log1p_exp(x: ndarray) -> ndarray:
     def for1d(a):
         if a <= 0:
             return np.log1p(np.exp(a))
@@ -20,19 +21,19 @@ def log1p_exp(x):
 class ObjFunc():
     # データセットを用いたパラメタの設定などが必要な場合はこれを用いる
     @abstractmethod
-    def setup_with_data_set(self, data_set: DataSet):
+    def setup_with_data_set(self, data_set: DataSet) -> None:
         pass
 
     @abstractmethod
-    def apply(self, data_set: DataSet, w):
+    def apply(self, data_set: DataSet, w: ndarray) -> float:
         pass
 
     @abstractmethod
-    def apply_grad(self, data_set: DataSet, w):
+    def apply_grad(self, data_set: DataSet, w: ndarray) -> ndarray:
         pass
 
     @abstractmethod
-    def apply_hessian(self, data_set: DataSet, w):
+    def apply_hessian(self, data_set: DataSet, w: ndarray) -> ndarray:
         pass
 
     # 損失関数の勾配のLipsitz連続性の係数
@@ -46,7 +47,7 @@ class LinearLogistic(ObjFunc):
 
     # i番目の要素が p_i = p(y_i | x_i, w) となる列ベクトルを返す
     # p_i = 1/(1 + exp(-y w.T x))
-    def __calc_posterior(self, data_set: DataSet, w):
+    def __calc_posterior(self, data_set: DataSet, w: ndarray) -> ndarray:
         # overflow対策
         def for1d(a):
             if a <= 0:
@@ -62,10 +63,10 @@ class LinearLogistic(ObjFunc):
         assert(posterior.shape == (data_set.qty_sample, 1))
         return posterior
 
-    def setup_with_data_set(self, data_set: DataSet):
+    def setup_with_data_set(self, data_set: DataSet) -> float:
         self.__lambda = 0.01 * data_set.qty_sample
 
-    def apply(self, data_set: DataSet, w):
+    def apply(self, data_set: DataSet, w: ndarray) -> float:
         assert(data_set.dim == w.shape[0])
         (x, y) = (data_set.x, data_set.y)
 
@@ -75,7 +76,7 @@ class LinearLogistic(ObjFunc):
         assert(loss.shape == (1, 1))
         return loss
 
-    def apply_grad(self, data_set: DataSet, w):
+    def apply_grad(self, data_set: DataSet, w: ndarray) -> ndarray:
         assert(data_set.dim == w.shape[0])
         (x, y) = (data_set.x, data_set.y)
 
@@ -85,7 +86,7 @@ class LinearLogistic(ObjFunc):
         assert(grad.shape == w.shape)
         return grad
 
-    def apply_hessian(self, data_set: DataSet, w):
+    def apply_hessian(self, data_set: DataSet, w: ndarray) -> ndarray:
         assert(data_set.dim == w.shape[0])
         x = data_set.x
 
@@ -99,7 +100,7 @@ class LinearLogistic(ObjFunc):
 
         return acc
 
-    def get_grad_lipsitz(self, data_set: DataSet):
+    def get_grad_lipsitz(self, data_set: DataSet) -> float:
         x = data_set.x
         acc = 0.0
         for i in range(0, data_set.qty_sample):
