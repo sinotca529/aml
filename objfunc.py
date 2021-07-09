@@ -6,17 +6,28 @@ from dataset import *
 
 EPS = 10e-7
 
-# log(1 + e^x) を 計算する
-# xがでかい場合でもオーバーフローしない
+# xの各要素aをlog(1 + e^a)にする。
+# aがでかい場合でもオーバーフローしない
 def log1p_exp(x: ndarray) -> ndarray:
-    def for1d(a):
+    def log1p_exp_1d(a: float) -> float:
         if a <= 0:
             return np.log1p(np.exp(a))
         else:
             return a + np.log1p(np.exp(-a))
 
-    return np.array([*map(lambda a: for1d(a), x)])
+    return np.vectorize(log1p_exp_1d)(x)
 
+# xの各要素aを1/(1 + e^a)にする。
+# aがでかい場合でもオーバーフローしない
+def inv_1p_exp(x: ndarray) -> ndarray:
+    def inv_1p_exp_for1d(a: float) -> float:
+        if a <= 0:
+            return 1.0 / (1.0 + np.exp(a))
+        else:
+            m = np.exp(-a)
+            return m / (1.0 + m)
+
+    return np.vectorize(inv_1p_exp_for1d)(x)
 
 class ObjFunc():
     # データセットを用いたパラメタの設定などが必要な場合はこれを用いる
@@ -48,18 +59,9 @@ class LinearLogistic(ObjFunc):
     # i番目の要素が p_i = p(y_i | x_i, w) となる列ベクトルを返す
     # p_i = 1/(1 + exp(-y w.T x))
     def __calc_posterior(self, data_set: DataSet, w: ndarray) -> ndarray:
-        # overflow対策
-        def for1d(a):
-            if a <= 0:
-                return 1.0 / (1.0 + np.exp(a))
-            else:
-                m = np.exp(-a)
-                return m / (1.0 + m)
-
         assert(data_set.dim == w.shape[0])
         (x, y) = (data_set.x, data_set.y)
-        # posterior = 1.0 / (1.0 + np.exp(-y * x.dot(w)))
-        posterior = np.array([*map(lambda a: for1d(a), -y * x.dot(w))])
+        posterior = inv_1p_exp(-y * x.dot(w))
         assert(posterior.shape == (data_set.qty_sample, 1))
         return posterior
 
