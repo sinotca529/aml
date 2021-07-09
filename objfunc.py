@@ -38,7 +38,7 @@ class ObjFunc():
 
     # 損失関数の勾配のLipsitz連続性の係数
     @abstractmethod
-    def get_grad_lipsitz(self, data_set: DataSet):
+    def get_grad_lipsitz(self, data_set: DataSet) -> float:
         pass
 
 class LinearLogistic(ObjFunc):
