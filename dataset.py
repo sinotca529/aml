@@ -4,7 +4,7 @@ from numpy import ndarray
 class DataSet():
     # x: 各行が1サンプルを表す行列
     # y: 各サンプルのラベルを表す行列(縦ベクトル)
-    def __init__(self, x: ndarray, y: ndarray) -> None:
+    def __init__(self, x: ndarray, y: ndarray, qty_category: int) -> None:
         (qty_sample, dim) = x.shape
         assert(qty_sample == y.shape[0])
         assert(y.shape[1] == 1)
@@ -12,6 +12,7 @@ class DataSet():
         self.qty_sample = qty_sample
         self.x = x
         self.y = y
+        self.qty_category = qty_category
 
 def gen_dataset_iv(qty_sample = 200, dim = 4) -> DataSet:
     x = 3 * (np.random.rand(qty_sample, dim) - 0.5)
@@ -21,7 +22,7 @@ def gen_dataset_iv(qty_sample = 200, dim = 4) -> DataSet:
     x[:, 0] = 1
     assert(len(x) == qty_sample)
     assert(len(x) == len(y))
-    return DataSet(x, y)
+    return DataSet(x, y, 2)
 
 def gen_dataset_v(qty_sample = 200, dim = 4) -> DataSet:
     x = 3 * (np.random.rand(qty_sample, dim) - 0.5)
@@ -36,8 +37,8 @@ def gen_dataset_v(qty_sample = 200, dim = 4) -> DataSet:
     wxs += noize
     # maxlogit = np.max(wxs, axis=1)
     y = np.argmax(wxs, axis=1)
-    
-    DataSet(x, y)
+
+    DataSet(x, y, 3)
 
 def test_data() -> DataSet:
     x = np.array([
