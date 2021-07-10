@@ -15,7 +15,7 @@ class DataSet():
 
 def gen_dataset_iv(qty_sample = 200, dim = 4) -> DataSet:
     x = 3 * (np.random.rand(qty_sample, dim) - 0.5)
-    y = (2 * x[:, 1:2] - 1 * x[:, 2:3] + 0.5 + 0.5 * np.random.rand(qty_sample, 1)) > 0
+    y = (2 * x[:, 0:1] - 1 * x[:, 1:2] + 0.5 + 0.5 * np.random.rand(qty_sample, 1)) > 0
     y = 2 * y - 1
 
     x[:, 0] = 1
@@ -31,7 +31,13 @@ def gen_dataset_v(qty_sample = 200, dim = 4) -> DataSet:
         [1, 2, 3]
     ])
 
-    (maxlogit, y) = max()
+    noize = 0.5 * np.random.rand(qty_sample, 3)
+    wxs = np.concatenate([x[:, 0:2], np.ones((qty_sample,1))], axis=1).dot(W.T)
+    wxs += noize
+    # maxlogit = np.max(wxs, axis=1)
+    y = np.argmax(wxs, axis=1)
+    
+    DataSet(x, y)
 
 def test_data() -> DataSet:
     x = np.array([
