@@ -19,7 +19,8 @@ def gen_dataset_iv(qty_sample = 200, dim = 4) -> DataSet:
     y = (2 * x[:, 0:1] - 1 * x[:, 1:2] + 0.5 + 0.5 * np.random.rand(qty_sample, 1)) > 0
     y = 2 * y - 1
 
-    x[:, 0] = 1
+    # y = [x0 x1 x2 1]^T [2 -1 0 0.5] >0 となるようにしている。
+    x[:,3] = 1
     assert(len(x) == qty_sample)
     assert(len(x) == len(y))
     return DataSet(x, y, 2)
