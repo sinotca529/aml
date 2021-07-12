@@ -122,7 +122,6 @@ class MulticlassLogisticRegression(ObjFunc):
     def setup_with_data_set(self, data_set: DataSet) -> float:
         self.__lambda = 0.01 * data_set.qty_sample
 
-    # todo : 実装の確認
     def apply(self, data_set: DataSet, w: ndarray) -> float:
         (x, y) = (data_set.x, data_set.y)
         dim = data_set.dim
@@ -130,18 +129,18 @@ class MulticlassLogisticRegression(ObjFunc):
         qty_sample = data_set.qty_sample
         assert(w.shape == (qty_c, dim))
 
-        # Σ[i=0..n] ln(Σ[c=0..C] exp(<w_c, x_i>))
-        # を求める
+        # lse[i] = ln(Σ[c=0..C] exp(<w_c, x_i>))
         lse = np.apply_along_axis(log_sum_exp, 1, x.dot(w.T))
         assert(lse.shape == (qty_sample, 1))
+
+        # slse = Σ[i=0..n] ln(Σ[c=0..C] exp(<w_c, x_i>))
         slse = np.sum(lse)
 
         # Σ[i=0..n] -<w_y(i) x_i>
         # を求める
         acc = 0.0
         for i in range(0, qty_sample):
-            ci = y[i]
-            wyi = w[ci]
+            wyi = w[y[i]]
             xi = x[:, i]
             acc += -wyi.dot(xi)[0,0]
         
