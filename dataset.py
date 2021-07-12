@@ -38,6 +38,7 @@ def gen_dataset_v(qty_sample = 200, dim = 4) -> DataSet:
     wxs += noize
     # maxlogit = np.max(wxs, axis=1)
     y = np.argmax(wxs, axis=1)
+    y = y.reshape((len(y), 1))
 
     DataSet(x, y, 3)
 
