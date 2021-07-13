@@ -18,17 +18,17 @@ def log1p_exp(x: ndarray) -> ndarray:
 
     return np.vectorize(log1p_exp_1d)(x)
 
-# xの各要素aを1/(1 + e^a)にする。
-# aがでかい場合でもオーバーフローしない
-def inv_1p_exp(x: ndarray) -> ndarray:
-    def inv_1p_exp_for1d(a: float) -> float:
-        if a <= 0:
-            return 1.0 / (1.0 + np.exp(a))
+# matの各要素aを1/(1 + e^-a)にする。
+def sigmoid(mat: ndarray) -> ndarray:
+    def sigmoid_for1d(a: float) -> float:
+        # オーバーフロー防止
+        if a >= 0:
+            return 1.0 / (1.0 + np.exp(-a))
         else:
-            m = np.exp(-a)
+            m = np.exp(a)
             return m / (1.0 + m)
 
-    return np.vectorize(inv_1p_exp_for1d)(x)
+    return np.vectorize(sigmoid_for1d)(mat)
 
 # ベクトルを受け取り、各要素をexpしたものの和の、logをとる。
 # Overflowが起きるなら、式変換した(まともな)実装に直す必要あり。
@@ -69,7 +69,7 @@ class LinearLogistic(ObjFunc):
     def __calc_posterior(self, data_set: DataSet, w: ndarray) -> ndarray:
         assert(data_set.dim == w.shape[0])
         (x, y) = (data_set.x, data_set.y)
-        posterior = inv_1p_exp(-y * x.dot(w))
+        posterior = sigmoid(y * x.dot(w))
         assert(posterior.shape == (data_set.qty_sample, 1))
         return posterior
 
@@ -84,7 +84,7 @@ class LinearLogistic(ObjFunc):
         reg = self.__lambda * (w.T.dot(w))
         loss = loss_without_reg + reg
         assert(loss.shape == (1, 1))
-        return loss
+        return loss[0, 0]
 
     def apply_grad(self, data_set: DataSet, w: ndarray) -> ndarray:
         assert(data_set.dim == w.shape[0])
@@ -130,8 +130,7 @@ class MulticlassLogisticRegression(ObjFunc):
         assert(w.shape == (qty_c, dim))
 
         # lse[i] = ln(Σ[c=0..C] exp(<w_c, x_i>))
-        lse = np.apply_along_axis(log_sum_exp, 1, x.dot(w.T))
-        assert(lse.shape == (qty_sample, 1))
+        lse = np.apply_along_axis(log_sum_exp, 1, x.dot(w.T)).reshape((qty_sample, 1))
 
         # slse = Σ[i=0..n] ln(Σ[c=0..C] exp(<w_c, x_i>))
         slse = np.sum(lse)
@@ -141,8 +140,8 @@ class MulticlassLogisticRegression(ObjFunc):
         acc = 0.0
         for i in range(0, qty_sample):
             wyi = w[y[i]]
-            xi = x[:, i]
-            acc += -wyi.dot(xi)[0,0]
+            xi = x[i]
+            acc += -wyi.dot(xi)
         
         reg = np.linalg.norm(w, ord=2)
         loss = slse + acc + reg
@@ -158,13 +157,13 @@ class MulticlassLogisticRegression(ObjFunc):
 
         # 分子: numerator[r, i] = exp(<w_r, x_i>)
         numerator = np.exp(w.dot(x.T))
-        assert(numerator.shape == (qty_sample, qty_c))
+        assert(numerator.shape == (qty_c, qty_sample))
 
         # 分母: denominator[i] = Σ_c exp(<w_c, x_i>)
         denominator = np.sum(numerator, axis=0)
 
         posterior =  numerator/denominator
-        assert(posterior.shape == (qty_sample, 1))
+        assert(posterior.shape == (qty_c, qty_sample))
         return posterior
 
     # 各行が各カテゴリの重みの勾配に相当
@@ -178,14 +177,14 @@ class MulticlassLogisticRegression(ObjFunc):
         posterior = self.__calc_posterior(data_set, w)
 
         # yr[r, i] = [[ y_i == r ]] を作る
-        yr = [[int(i==y[j]) for j in range(0, y.shape[0])] for i in range(0, qty_c)]
+        yr = np.array([[int(i==y[j]) for j in range(0, y.shape[0])] for i in range(0, qty_c)])
         assert(yr.shape == (qty_c, qty_sample))
 
         grad = (posterior - yr).dot(x) + 2 * self.__lambda * w
+        assert(grad.shape == w.shape)
+        return grad
 
-        # wi = x( p(i|x) - [[ y==i ]] )
-        pass
-
+    # hessian[i] = w_r用のヘッシアン
     def apply_hessian(self, data_set: DataSet, w: ndarray) -> ndarray:
         (x, y) = (data_set.x, data_set.y)
         dim = data_set.dim
