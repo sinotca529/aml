@@ -78,7 +78,7 @@ while iter < max_iter:
     for i in range(0, n):
         xi = x[i,:].reshape((1, dim))
         acc += p1mp[i] * xi.T.dot(xi)
-    acc += 2 * lambda_
+    acc += 2 * lambda_ * np.identity(dim)
     hess = acc
     # hessianが正定値行列でないなら、うまく行かないので警告
     if not np.all(np.linalg.eigvals(hess) > 0):
