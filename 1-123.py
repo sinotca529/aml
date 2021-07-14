@@ -80,6 +80,9 @@ while iter < max_iter:
         acc += p1mp[i] * xi.T.dot(xi)
     acc += 2 * lambda_
     hess = acc
+    # hessianが正定値行列でないなら、うまく行かないので警告
+    if not np.all(np.linalg.eigvals(hess) > 0):
+        print(f"[WARNING@{iter}-th iter] ヘッシアンが正定値じゃないよ")
 
     # update weight and calc new loss
     w = w - np.linalg.inv(hess).dot(grad)
@@ -91,8 +94,8 @@ while iter < max_iter:
 
     iter += 1
 
-print(f"sgm w :\n{w_hist_sgm[-1]}")
-print(f"newton w :\n{w_hist_newton[-1]}")
+print(f"sgm w :\n{w_hist_sgm[-1].reshape((4,))}")
+print(f"newton w :\n{w_hist_newton[-1].reshape((4,))}")
 
 # show graph
 min_loss = loss_hist_newton[-1]
@@ -105,7 +108,7 @@ ts_n = np.arange(0, len(dif_loss_n), 1)
 plt.plot(ts_n, dif_loss_n, 'bo-', linewidth=0.5, markersize=0.5, label='newton')
 plt.plot(ts_g, dif_loss_g, 'ro-', linewidth=0.5, markersize=0.5, label='steepest')
 plt.legend()
-plt.xlabel('t')
+plt.xlabel('#iteration')
 plt.ylabel('|J(w(t)) - j(w^)|')
 plt.gca().set_yscale('log')
 plt.show()
