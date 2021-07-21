@@ -20,6 +20,8 @@ W = np.array([
     [-3, 2, 1, 0],
     [1, 2, 3, 0]
 ])
+print("true w:")
+print(W)
 
 noize = 0.5 * np.random.rand(N, 3)
 wxs = x.dot(W.T)
@@ -153,9 +155,13 @@ while iter < max_iter:
 
     iter += 1
 
-# ts_n = np.arange(0, len(loss_hist_newton), 1)
-# plt.plot(ts_n, loss_hist_newton, 'bo-', linewidth=0.5, markersize=0.5, label='newton')
-# plt.show()
+ts_n = np.arange(0, len(loss_hist_newton), 1)
+ts_g = np.arange(0, len(loss_hist_sgm), 1)
+plt.plot(ts_n, loss_hist_newton, 'bo-', linewidth=0.5, markersize=0.5, label='newton')
+plt.plot(ts_g, loss_hist_sgm, 'ro-', linewidth=0.5, markersize=0.5, label='steepest')
+plt.xlabel('#iteration')
+plt.ylabel('|J(w(t))|')
+plt.show()
 
 print(f"sgm w :\n{w_hist_sgm[-1]}")
 print(f"newton w :\n{w_hist_newton[-1]}")
@@ -168,12 +174,10 @@ ts_g = np.arange(0, len(dif_loss_g), 1)
 dif_loss_n = np.abs(loss_hist_newton - min_loss)
 ts_n = np.arange(0, len(dif_loss_n), 1)
 
-# plt.plot(ts_n, dif_loss_n, 'bo-', linewidth=0.5, markersize=0.5, label='newton')
-# plt.plot(ts_g, dif_loss_g, 'ro-', linewidth=0.5, markersize=0.5, label='steepest')
-plt.plot(ts_n, loss_hist_newton, 'bo-', linewidth=0.5, markersize=0.5, label='newton')
-plt.plot(ts_g, loss_hist_sgm, 'ro-', linewidth=0.5, markersize=0.5, label='steepest')
+plt.plot(ts_n, dif_loss_n, 'bo-', linewidth=0.5, markersize=0.5, label='newton')
+plt.plot(ts_g, dif_loss_g, 'ro-', linewidth=0.5, markersize=0.5, label='steepest')
 plt.legend()
-plt.xlabel('t')
+plt.xlabel('#iteration')
 plt.ylabel('|J(w(t)) - j(w^)|')
 plt.gca().set_yscale('log')
 plt.show()
