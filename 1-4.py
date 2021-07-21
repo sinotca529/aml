@@ -48,7 +48,7 @@ def calc_loss(w):
         wyi = w[y[i]]
         xi = x[i]
         acc += -wyi.dot(xi)
-    reg = np.linalg.norm(w, ord=2)
+    reg = np.linalg.norm(w, ord=2)**2
     loss = slse + acc + reg
     return loss
 
@@ -99,7 +99,7 @@ while iter < max_iter:
 # plt.show()
 
 # newton method
-max_iter = 1000
+max_iter = 300
 loss_hist_newton = []
 w_hist_newton = []
 
@@ -155,14 +155,6 @@ while iter < max_iter:
 
     iter += 1
 
-ts_n = np.arange(0, len(loss_hist_newton), 1)
-ts_g = np.arange(0, len(loss_hist_sgm), 1)
-plt.plot(ts_n, loss_hist_newton, 'bo-', linewidth=0.5, markersize=0.5, label='newton')
-plt.plot(ts_g, loss_hist_sgm, 'ro-', linewidth=0.5, markersize=0.5, label='steepest')
-plt.xlabel('#iteration')
-plt.ylabel('|J(w(t))|')
-plt.show()
-
 print(f"sgm w :\n{w_hist_sgm[-1]}")
 print(f"newton w :\n{w_hist_newton[-1]}")
 
@@ -173,6 +165,13 @@ dif_loss_g = np.abs(loss_hist_sgm - min_loss)
 ts_g = np.arange(0, len(dif_loss_g), 1)
 dif_loss_n = np.abs(loss_hist_newton - min_loss)
 ts_n = np.arange(0, len(dif_loss_n), 1)
+
+plt.plot(ts_n, loss_hist_newton, 'bo-', linewidth=0.5, markersize=0.5, label='newton')
+plt.plot(ts_g, loss_hist_sgm, 'ro-', linewidth=0.5, markersize=0.5, label='steepest')
+plt.xlabel('#iteration')
+plt.ylabel('|J(w(t))|')
+plt.legend()
+plt.show()
 
 plt.plot(ts_n, dif_loss_n, 'bo-', linewidth=0.5, markersize=0.5, label='newton')
 plt.plot(ts_g, dif_loss_g, 'ro-', linewidth=0.5, markersize=0.5, label='steepest')
