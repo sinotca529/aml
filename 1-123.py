@@ -106,6 +106,15 @@ ts_g = np.arange(0, len(dif_loss_g), 1)
 dif_loss_n = np.abs(loss_hist_newton - min_loss)
 ts_n = np.arange(0, len(dif_loss_n), 1)
 
+plt.plot(ts_n, loss_hist_newton, 'bo-', linewidth=0.5, markersize=0.5, label='newton')
+plt.plot(ts_g, loss_hist_sgm, 'ro-', linewidth=0.5, markersize=0.5, label='steepest')
+plt.legend()
+plt.xlabel('#iteration')
+plt.ylabel('|J(w(t))|')
+plt.gca().set_yscale('log')
+plt.show()
+
+
 plt.plot(ts_n, dif_loss_n, 'bo-', linewidth=0.5, markersize=0.5, label='newton')
 plt.plot(ts_g, dif_loss_g, 'ro-', linewidth=0.5, markersize=0.5, label='steepest')
 plt.legend()
