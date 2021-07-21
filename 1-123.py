@@ -19,7 +19,8 @@ noize = 0.5 * np.random.rand(n, 1)
 true_w = np.array([[2, -1, 0, 0.5]]).T
 y = (x.dot(true_w) + noize) > 0
 y = 2 * y - 1
-
+print("true w :")
+print(true_w.reshape((4,)))
 assert(len(x) == n)
 assert(len(x) == len(y))
 
