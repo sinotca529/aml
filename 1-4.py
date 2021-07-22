@@ -129,10 +129,10 @@ for iter in range(max_iter):
     # update weight and calc new loss
 
     # 良さげな更新幅を見るためのコード
-    lx = np.arange(-2, 2, 0.1)
-    ly = np.array([*map(lambda a: calc_loss(w - a*np.linalg.inv(hess).dot(grad.reshape((C*D,1))).reshape(w.shape)), lx)]).reshape((len(lx),))
-    plt.plot(lx, ly)
-    plt.show()
+    # lx = np.arange(-2, 2, 0.1)
+    # ly = np.array([*map(lambda a: calc_loss(w - a*np.linalg.inv(hess).dot(grad.reshape((C*D,1))).reshape(w.shape)), lx)]).reshape((len(lx),))
+    # plt.plot(lx, ly)
+    # plt.show()
 
     w = w - np.linalg.inv(hess).dot(grad.reshape((C*D,1))).reshape(w.shape)
 
