@@ -24,12 +24,7 @@ print("true w:")
 print(W)
 
 noize = 0.5 * np.random.rand(N, 3)
-wxs = x.dot(W.T)
-
-wxs += noize
-# maxlogit = np.max(wxs, axis=1)
-y = np.argmax(wxs, axis=1)
-y = y.reshape((len(y), 1))
+y = np.argmax(x.dot(W.T) + noize, axis=1).reshape((N, 1))
 
 # define objective function
 lambda_ = 0.01 * N
@@ -54,14 +49,11 @@ def calc_loss(w):
 
 # ## steepest gradient method
 max_iter = 300
-loss_hist_sgm = []
-w_hist_sgm = []
+w = w0
+loss_hist_sgm = [calc_loss(w)]
+w_hist_sgm = [w]
 lip = np.trace(x.dot(x.T)) / 4.0 + 2.0 * lambda_
 
-iter = 0
-w = w0
-w_hist_sgm.append(w0)
-loss_hist_sgm.append(calc_loss(w0))
 for iter in range(max_iter):
     # calc posterior : posterior[r, i] = p(r | xi)
     posterior = np.apply_along_axis(softmax, 0, w.dot(x.T))
@@ -83,19 +75,12 @@ for iter in range(max_iter):
     w_hist_sgm.append(w)
     loss_hist_sgm.append(loss)
 
-# ts_g = np.arange(0, len(loss_hist_sgm), 1)
-# plt.plot(ts_g, loss_hist_sgm, 'ro-', linewidth=0.5, markersize=0.5, label='steepest')
-# plt.show()
-
 # newton method
 max_iter = 300
-loss_hist_newton = []
-w_hist_newton = []
-
-iter = 0
 w = w0
-w_hist_newton.append(w0)
-loss_hist_newton.append(calc_loss(w0))
+loss_hist_newton = [calc_loss(w)]
+w_hist_newton = [w]
+
 for iter in range(max_iter):
     # calc posterior : posterior[r, i] = p(r | xi)
     posterior = np.apply_along_axis(softmax, 0, w.dot(x.T))
@@ -142,8 +127,32 @@ for iter in range(max_iter):
     loss_hist_newton.append(loss)
 
 
+# 結果の観察
 print(f"sgm w :\n{w_hist_sgm[-1]}")
 print(f"newton w :\n{w_hist_newton[-1]}")
+
+## 学習データセットの正解率
+y_sgm = np.argmax(x.dot(w_hist_sgm[-1].T), axis=1).reshape((N, 1))
+y_sgm_ok = np.count_nonzero(y_sgm == y)
+print(f"train correct sgm    : {y_sgm_ok} / {N}")
+
+y_new = np.argmax(x.dot(w_hist_newton[-1].T), axis=1).reshape((N, 1))
+y_new_ok = np.count_nonzero(y_new == y)
+print(f"train correct newton : {y_new_ok} / {N}")
+
+## 新規データに対する正答率
+x = 3 * (np.random.rand(N, D) - 0.5)
+x[:,2] = 1.0
+noize = 0.5 * np.random.rand(N, 3)
+y = np.argmax(x.dot(W.T) + noize, axis=1).reshape((N, 1))
+
+y_sgm = np.argmax(x.dot(w_hist_sgm[-1].T), axis=1).reshape((N, 1))
+y_sgm_ok = np.count_nonzero(y_sgm == y)
+print(f"test  correct sgm    : {y_sgm_ok} / {N}")
+
+y_new = np.argmax(x.dot(w_hist_newton[-1].T), axis=1).reshape((N, 1))
+y_new_ok = np.count_nonzero(y_new == y)
+print(f"test  correct newton : {y_new_ok} / {N}")
 
 # show graph
 min_loss = loss_hist_newton[-1]

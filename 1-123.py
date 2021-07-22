@@ -9,94 +9,99 @@ np.random.seed(777)
 EPS = 10e-7
 
 # prepare dataset iv
-n = 200
-dim = 4
+N = 200
+D = 4
 # オフセット用に最後の要素を1にしておく
-x = 3 * (np.random.rand(n, dim) - 0.5)
+x = 3 * (np.random.rand(N, D) - 0.5)
 x[:,3] = 1
 
-noize = 0.5 * np.random.rand(n, 1)
+noize = 0.5 * np.random.rand(N, 1)
 true_w = np.array([[2, -1, 0, 0.5]]).T
-y = (x.dot(true_w) + noize) > 0
-y = 2 * y - 1
+y = 2 * ((x.dot(true_w) + noize) > 0) - 1
 print("true w :")
 print(true_w.reshape((4,)))
-assert(len(x) == n)
+assert(len(x) == N)
 assert(len(x) == len(y))
 
 # define objective function
-lambda_ = 0.01 * n
-w0 = 3 * np.random.rand(dim, 1)
+lambda_ = 0.01 * N
+w0 = 3 * np.random.rand(D, 1)
 
 ## steepst gradient method
 max_iter = 500
-loss_hist_sgm = []
-w_hist_sgm = []
+w = w0
+loss_hist_sgm = [np.sum(log1p_exp(-y * x.dot(w)), axis=0) + lambda_ * (w.T.dot(w))[0,0]]
+w_hist_sgm = [w]
 lip = np.trace(x.dot(x.T)) / 4.0 + 2.0 * lambda_
 
-iter = 0
-w = w0
-w_hist_sgm.append(w0)
-loss_hist_sgm.append(np.sum(log1p_exp(-y * x.dot(w)), axis=0) + lambda_ * (w.T.dot(w))[0,0])
-while iter < max_iter:
+for iter in range(max_iter):
     posterior = sigmoid(y * x.dot(w))
-    grad = np.sum(-y * x * (1.0 - posterior), axis=0).reshape((dim, 1)) + 2 * lambda_ * w
+    grad = np.sum(-y * x * (1.0 - posterior), axis=0).reshape((D, 1)) + 2 * lambda_ * w
 
     # 終了判定
     if np.linalg.norm(grad, ord=2) < EPS:
         break
 
-    # update weight and calc new loss
+    # update weight
     w = w - (1.0 / lip) * grad
-    loss = np.sum(log1p_exp(-y * x.dot(w)), axis=0) + lambda_ * (w.T.dot(w))[0,0]
 
     # update history
     w_hist_sgm.append(w)
-    loss_hist_sgm.append(loss)
-
-    iter += 1
-
+    loss_hist_sgm.append(np.sum(log1p_exp(-y * x.dot(w)), axis=0) + lambda_ * (w.T.dot(w))[0,0])
 
 ## newton method
 max_iter = 500
-loss_hist_newton = []
-w_hist_newton = []
-
-iter = 0
 w = w0
-w_hist_newton.append(w0)
-loss_hist_newton.append(np.sum(log1p_exp(-y * x.dot(w)), axis=0) + lambda_ * (w.T.dot(w))[0,0])
-while iter < max_iter:
+loss_hist_newton = [np.sum(log1p_exp(-y * x.dot(w)), axis=0) + lambda_ * (w.T.dot(w))[0,0]]
+w_hist_newton = [w]
+
+while iter in range(max_iter):
     posterior = sigmoid(y * x.dot(w))
-    grad = np.sum(-y * x * (1.0 - posterior), axis=0).reshape((dim, 1)) + 2 * lambda_ * w
+    grad = np.sum(-y * x * (1.0 - posterior), axis=0).reshape((D, 1)) + 2 * lambda_ * w
     # 終了判定
     if np.linalg.norm(grad, ord=2) < EPS:
         break
 
     # calc hessian
     p1mp = posterior * (1 - posterior)
-    acc = np.zeros((dim, dim))
-    for i in range(0, n):
-        xi = x[i,:].reshape((1, dim))
-        acc += p1mp[i] * xi.T.dot(xi)
-    acc += 2 * lambda_ * np.identity(dim)
-    hess = acc
-    # hessianが正定値行列でないなら、うまく行かないので警告
+    pp = np.diag(p1mp.reshape((N,)))
+    hess = x.T.dot(pp).dot(x) + 2 * lambda_ * np.identity(D)
     if not np.all(np.linalg.eigvals(hess) > 0):
         print(f"[WARNING@{iter}-th iter] ヘッシアンが正定値じゃないよ")
 
-    # update weight and calc new loss
+    # update weight
     w = w - np.linalg.inv(hess).dot(grad)
-    loss = np.sum(log1p_exp(-y * x.dot(w)), axis=0) + lambda_ * (w.T.dot(w))[0,0]
 
     # update history
     w_hist_newton.append(w)
-    loss_hist_newton.append(loss)
+    loss_hist_newton.append(np.sum(log1p_exp(-y * x.dot(w)), axis=0) + lambda_ * (w.T.dot(w))[0,0])
 
-    iter += 1
-
+# 結果の観察
 print(f"sgm w :\n{w_hist_sgm[-1].reshape((4,))}")
 print(f"newton w :\n{w_hist_newton[-1].reshape((4,))}")
+
+## 学習データセットの正解率
+y_sgm = 2 * ((x.dot(w_hist_sgm[-1]) + noize) > 0) - 1
+y_sgm_ok = np.count_nonzero(y_sgm == y)
+print(f"train correct sgm    : {y_sgm_ok} / {N}")
+
+y_new = 2 * ((x.dot(w_hist_newton[-1]) + noize) > 0) - 1
+y_new_ok = np.count_nonzero(y_new == y)
+print(f"train correct newton : {y_new_ok} / {N}")
+
+## 新規データに対する正答率
+x = 3 * (np.random.rand(N, D) - 0.5)
+x[:,3] = 1
+noize = 0.5 * np.random.rand(N, 1)
+y = 2 * ((x.dot(true_w) + noize) > 0) - 1
+
+y_sgm = 2 * ((x.dot(w_hist_sgm[-1]) + noize) > 0) - 1
+y_sgm_ok = np.count_nonzero(y_sgm == y)
+print(f"test  correct sgm    : {y_sgm_ok} / {N}")
+
+y_new = 2 * ((x.dot(w_hist_newton[-1]) + noize) > 0) - 1
+y_new_ok = np.count_nonzero(y_new == y)
+print(f"test  correct newton : {y_new_ok} / {N}")
 
 # show graph
 min_loss = loss_hist_newton[-1]
