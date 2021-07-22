@@ -64,9 +64,7 @@ w_hist_sgm.append(w0)
 loss_hist_sgm.append(calc_loss(w0))
 while iter < max_iter:
     # calc posterior : posterior[r, i] = p(r | xi)
-    numerator = np.exp(w.dot(x.T))
-    denominator = np.sum(numerator, axis=0)
-    posterior = numerator/denominator
+    posterior = np.apply_along_axis(softmax, 0, w.dot(x.T))
 
     # calc grad : grad[:, r] = grad of w_r
     ## yr[r, i] = [[ y_i == r ]]
@@ -109,9 +107,7 @@ w_hist_newton.append(w0)
 loss_hist_newton.append(calc_loss(w0))
 while iter < max_iter:
     # calc posterior : posterior[r, i] = p(r | xi)
-    numerator = np.exp(w.dot(x.T))
-    denominator = np.sum(numerator, axis=0)
-    posterior = numerator/denominator
+    posterior = np.apply_along_axis(softmax, 0, w.dot(x.T))
 
     # calc grad : grad[:, r] = grad of w_r
     ## yr[r, i] = [[ y_i == r ]]
