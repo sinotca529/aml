@@ -62,25 +62,18 @@ iter = 0
 w = w0
 w_hist_sgm.append(w0)
 loss_hist_sgm.append(calc_loss(w0))
-while iter < max_iter:
+for iter in range(max_iter):
     # calc posterior : posterior[r, i] = p(r | xi)
     posterior = np.apply_along_axis(softmax, 0, w.dot(x.T))
 
     # calc grad : grad[:, r] = grad of w_r
     ## yr[r, i] = [[ y_i == r ]]
-    yr = np.array([[int(i==y[j]) for j in range(0, y.shape[0])] for i in range(0, C)])
+    yr = np.identity(C)[y.reshape((N,))].T
     grad = (posterior - yr).dot(x) + 2 * lambda_ * w
 
     # 終了判定
     if np.linalg.norm(grad, ord=2) < EPS:
         break
-
-    # ステップ幅を良さげに決める場合
-    # if iter > 490:
-    #     lx = np.arange(-2, 2, 0.1)
-    #     ly = np.array([*map(lambda a: calc_loss(w - a * (1.0 / lip) * grad), lx)]).reshape((len(lx),))
-    #     plt.plot(lx, ly)
-    #     plt.show()
 
     # update weight and calc new loss
     w = w - (1.0 / lip) * grad
@@ -89,8 +82,6 @@ while iter < max_iter:
     # update history
     w_hist_sgm.append(w)
     loss_hist_sgm.append(loss)
-
-    iter += 1
 
 # ts_g = np.arange(0, len(loss_hist_sgm), 1)
 # plt.plot(ts_g, loss_hist_sgm, 'ro-', linewidth=0.5, markersize=0.5, label='steepest')
@@ -105,13 +96,13 @@ iter = 0
 w = w0
 w_hist_newton.append(w0)
 loss_hist_newton.append(calc_loss(w0))
-while iter < max_iter:
+for iter in range(max_iter):
     # calc posterior : posterior[r, i] = p(r | xi)
     posterior = np.apply_along_axis(softmax, 0, w.dot(x.T))
 
     # calc grad : grad[:, r] = grad of w_r
     ## yr[r, i] = [[ y_i == r ]]
-    yr = np.array([[int(r==y[i]) for i in range(0, y.shape[0])] for r in range(0, C)])
+    yr = np.identity(C)[y.reshape((N,))].T
     grad = (posterior - yr).dot(x) + 2 * lambda_ * w
 
     # 終了判定
@@ -125,9 +116,10 @@ while iter < max_iter:
     for s in range(0, C):
         for r in range(0, C):
             # H_{sr} を計算
-            s_is_r = int(s==r)
-            for i in range(0, N):
-                hess[s*D:s*D + D, r*D:r*D + D] += posterior[r,i] * (s_is_r - posterior[s,i]) * xx[i]
+            ## pp[i, i] = p(r|x_i)( [s==r] - p(s|x_i) )
+            pp = np.diag(posterior[r] * (int(s==r) - posterior[s]))
+            hess[s*D:s*D + D, r*D:r*D + D] = x.T.dot(pp).dot(x)
+
     hess += 2 * lambda_ * np.identity(D*C)
 
     # hessianが正定値行列でないなら、うまく行かないので警告
@@ -137,19 +129,18 @@ while iter < max_iter:
     # update weight and calc new loss
 
     # 良さげな更新幅を見るためのコード
-    # lx = np.arange(-2, 2, 0.1)
-    # ly = np.array([*map(lambda a: calc_loss(w - a*np.linalg.inv(hess).dot(grad.reshape((C*D,1))).reshape(w.shape)), lx)]).reshape((len(lx),))
-    # plt.plot(lx, ly)
-    # plt.show()
+    lx = np.arange(-2, 2, 0.1)
+    ly = np.array([*map(lambda a: calc_loss(w - a*np.linalg.inv(hess).dot(grad.reshape((C*D,1))).reshape(w.shape)), lx)]).reshape((len(lx),))
+    plt.plot(lx, ly)
+    plt.show()
 
     w = w - np.linalg.inv(hess).dot(grad.reshape((C*D,1))).reshape(w.shape)
-    loss = calc_loss(w)
 
     # update history
     w_hist_newton.append(w)
+    loss = calc_loss(w)
     loss_hist_newton.append(loss)
 
-    iter += 1
 
 print(f"sgm w :\n{w_hist_sgm[-1]}")
 print(f"newton w :\n{w_hist_newton[-1]}")
