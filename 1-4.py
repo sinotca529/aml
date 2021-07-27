@@ -52,7 +52,7 @@ max_iter = 300
 w = w0
 loss_hist_sgm = [calc_loss(w)]
 w_hist_sgm = [w]
-lip = np.trace(x.dot(x.T)) / 4.0 + 2.0 * lambda_
+lip = 2 * np.trace(x.dot(x.T)) / 4.0 + 2.0 * lambda_
 
 for iter in range(max_iter):
     # calc posterior : posterior[r, i] = p(r | xi)
