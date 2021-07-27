@@ -25,7 +25,6 @@ def sigmoid(mat: ndarray) -> ndarray:
     return np.vectorize(sigmoid_for1d)(mat)
 
 # ベクトルを受け取り、各要素をexpしたものの和の、logをとる。
-# Overflowが起きるなら、式変換した(まともな)実装に直す必要あり。
 def log_sum_exp(x: ndarray) -> float:
     assert((x.shape == (x.shape[0],)) or (x.shape[1] == 1))
     max = x.max()
