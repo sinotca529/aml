@@ -24,6 +24,7 @@ print(true_w.reshape((4,)))
 assert(len(x) == N)
 assert(len(x) == len(y))
 
+# optimize
 max_iter = 100
 alpha = 3 * np.random.rand(N, 1)
 lam = 0.01*N
