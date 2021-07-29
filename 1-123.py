@@ -55,7 +55,7 @@ w = w0
 loss_hist_newton = [np.sum(log1p_exp(-y * x.dot(w)), axis=0) + lambda_ * (w.T.dot(w))[0,0]]
 w_hist_newton = [w]
 
-while iter in range(max_iter):
+for iter in range(max_iter):
     posterior = sigmoid(y * x.dot(w))
     grad = np.sum(-y * x * (1.0 - posterior), axis=0).reshape((D, 1)) + 2 * lambda_ * w
     # 終了判定
