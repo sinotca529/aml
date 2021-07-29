@@ -28,7 +28,6 @@ assert(len(x) == len(y))
 max_iter = 100
 alpha = 3 * np.random.rand(N, 1)
 lam = 0.01*N
-lip = np.trace(x.dot(x.T)) / 4.0 + 2.0 * lam
 
 a = (y * x).T
 k = a.T.dot(a)
@@ -62,7 +61,7 @@ for iter in range(max_iter):
     # 終了判定
     if np.linalg.norm(grad, ord=2) < EPS:
         break
-    alpha = project(alpha - (1/lip) * grad)
+    alpha = project(alpha - (0.01/np.sqrt(iter+1)) * grad)
     dual_lag_hist.append(dual_lag())
     hinge_loss_hist.append(hinge_loss())
 
